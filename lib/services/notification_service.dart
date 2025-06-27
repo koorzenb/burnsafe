@@ -70,6 +70,8 @@ class NotificationService {
 
   // Show high-priority alerts for status changes
   static Future<void> showBurnStatusAlert(BurnStatus status, {bool isChange = false}) async {
+    status = BurnStatus(lastUpdated: DateTime(2023, 10, 1, 10, 11), status: "status-burn"); // Example status for testing
+
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'burn_status_alerts',
       'Burn Status Alerts',

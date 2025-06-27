@@ -1,13 +1,17 @@
-import 'package:workmanager/workmanager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'web_scraper_service.dart';
-import 'notification_service.dart';
+
+import 'package:burnsafe/services/status_bar_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
+
 import '../models/burn_status.dart';
+import 'notification_service.dart';
+import 'web_scraper_service.dart';
 
 class SchedulerService {
   static const String _taskName = 'burnStatusCheck';
   static const String _lastStatusKey = 'lastBurnStatus';
+  static DateTime _target = DateTime.now();
 
   static Future<void> initialize() async {
     await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
@@ -20,16 +24,14 @@ class SchedulerService {
       _taskName,
       frequency: const Duration(hours: 24),
       initialDelay: _getInitialDelay(),
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
   }
 
   static Duration _getInitialDelay() {
     final now = DateTime.now();
-    final target = DateTime(now.year, now.month, now.day, 14, 0); // 2 PM
-    
+    final target = DateTime(now.year, now.month, now.day, 9, 51); // 2 PM
+
     if (now.isAfter(target)) {
       // If it's already past 2 PM today, schedule for 2 PM tomorrow
       return target.add(const Duration(days: 1)).difference(now);
@@ -44,21 +46,16 @@ class SchedulerService {
     if (status != null) {
       final prefs = await SharedPreferences.getInstance();
       final lastStatusJson = prefs.getString(_lastStatusKey);
-      
+
       BurnStatus? lastStatus;
       if (lastStatusJson != null) {
         lastStatus = BurnStatus.fromJson(jsonDecode(lastStatusJson));
       }
 
-      // Always send notification for daily check, but highlight if status changed
-      if (lastStatus == null || lastStatus.status != status.status) {
-        await NotificationService.showBurnStatusNotification(status);
-      } else {
-        // Send daily update even if status hasn't changed
-        await NotificationService.showBurnStatusNotification(status);
-      }
+      // Update status bar with smart notifications (includes both persistent status and dismissible alert)
+      await StatusBarService.updateStatusBar(status, lastStatus);
 
-      // Save the current status
+      // Save current status
       await prefs.setString(_lastStatusKey, jsonEncode(status.toJson()));
     }
   }

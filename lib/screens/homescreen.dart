@@ -88,7 +88,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: _fetchCurrentStatus, tooltip: 'Refresh Status', child: const Icon(Icons.refresh)),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(onPressed: StatusBarService.clearStatusBar, tooltip: 'Clear Notifications', heroTag: 'clear', child: const Icon(Icons.clear)),
+          const SizedBox(height: 8),
+          FloatingActionButton(onPressed: _fetchCurrentStatus, tooltip: 'Refresh Status', heroTag: 'refresh', child: const Icon(Icons.refresh)),
+        ],
+      ),
     );
   }
 }
