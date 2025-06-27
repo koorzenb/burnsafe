@@ -31,6 +31,8 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+macos/Flutter/
+windows/flutter/
 
 # Web related
 lib/generated_plugin_registrant.dart

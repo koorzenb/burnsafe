@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 
@@ -19,6 +20,7 @@ class WebScraperService {
           final statusCell = halifaxRow.querySelector('td');
           if (statusCell != null) {
             final status = statusCell.text.trim();
+            debugPrint('Fetched burn status: $status');
             return BurnStatus(status: status, lastUpdated: DateTime.now());
           }
         }
