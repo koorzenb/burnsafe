@@ -16,10 +16,11 @@ class WebScraperService {
 
         // Find the Halifax County row and get the status
         final halifaxRow = document.querySelector('tr#Halifax-County');
+
         if (halifaxRow != null) {
           final statusCell = halifaxRow.querySelector('td');
           if (statusCell != null) {
-            final status = statusCell.text.trim();
+            final status = statusCell.attributes['class']?.trim() ?? 'status-no-burn';
             debugPrint('Fetched burn status: $status');
             return BurnStatus(status: status, lastUpdated: DateTime.now());
           }

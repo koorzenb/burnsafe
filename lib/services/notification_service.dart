@@ -21,6 +21,8 @@ class NotificationService {
     await _requestPermissions();
   }
 
+  static FlutterLocalNotificationsPlugin get notifications => _notifications;
+
   static Future<void> _requestPermissions() async {
     await Permission.notification.request();
   }
@@ -79,16 +81,16 @@ class NotificationService {
 
     String title = isChange ? 'Burn Status Changed!' : 'Daily Burn Update';
 
-    await _notifications.show(0, title, 'Halifax County: ${status.status}', const NotificationDetails(android: androidDetails));
+    await _notifications.show(0, title, 'Halifax County: ${status.status}', NotificationDetails(android: androidDetails));
   }
 
   static Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'no restrictions':
+      case 'status-burn':
         return Colors.green;
-      case 'restricted':
+      case 'status-restricted':
         return Colors.orange;
-      case 'prohibited':
+      case 'status-no-burn':
         return Colors.red;
       default:
         return Colors.grey;
