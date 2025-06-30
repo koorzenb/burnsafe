@@ -1,3 +1,9 @@
+## 0.2.1
+
+### Refactor
+
+- Reorganised homescreen layout
+
 ## 0.2.0
 
 ### Chore

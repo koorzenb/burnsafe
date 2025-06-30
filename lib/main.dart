@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 
-import 'screens/homescreen.dart';
+import 'screens/homescreen/homescreen.dart';
 import 'services/notification_service.dart';
 import 'services/scheduler_service.dart';
 
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'BurnSafe Nova Scotia',
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange), useMaterial3: true),
       home: const HomeScreen(),
