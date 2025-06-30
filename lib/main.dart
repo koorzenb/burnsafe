@@ -10,7 +10,6 @@ void main() async {
   // Initialize services
   await NotificationService.initialize();
   await SchedulerService.initialize();
-
   runApp(const MyApp());
 }
 
