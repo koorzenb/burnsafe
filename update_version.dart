@@ -28,6 +28,7 @@ void main() {
   // Extract version and build number
   final currentVersion = Version.parse(currentVersionMatch.group(1)!); // Semantic version (e.g., 0.3.0)
   final currentBuildNumber = int.parse(currentVersionMatch.group(2)!); // Build number (e.g., 03000)
+  print('Extracted Current version: $currentVersion, Build number: $currentBuildNumber');
 
   // Get the current commit message from .git/COMMIT_EDITMSG
   final commitMessageFile = File('.git/COMMIT_EDITMSG');
@@ -37,6 +38,7 @@ void main() {
   }
 
   final commitMessage = commitMessageFile.readAsStringSync().trim();
+  print('Commit message: "$commitMessage"');
 
   if (commitMessage.isEmpty) {
     print('Error: Commit message is empty!');
@@ -64,18 +66,16 @@ void main() {
     nextVersion = currentVersion.nextMinor; // Increment the minor version
     nextBuildNumber = currentBuildNumber + 100; // Increment the build number
   }
+  print('Next version: $nextVersion, Next build number: $nextBuildNumber');
 
   // Update pubspec.yaml with new version and build number
-  final updatedPubspecContent = pubspecContent.replaceFirst(
-    RegExp(r'version:\s*\d+\.\d+\.\d+\+\d+'),
-    'version: $nextVersion+$nextBuildNumber',
-  );
+  final updatedPubspecContent = pubspecContent.replaceFirst(RegExp(r'version:\s*\d+\.\d+\.\d+\+\d+'), 'version: $nextVersion+$nextBuildNumber');
   pubspecFile.writeAsStringSync(updatedPubspecContent);
-
   print('Updated pubspec.yaml to version: $nextVersion+$nextBuildNumber');
 
   // Update CHANGELOG.md
-  final changelogEntry = '''
+  final changelogEntry =
+      '''
 ## $nextVersion
 
 ### ${capitalize(commitType == 'ref' ? 'refactor' : commitType)}
@@ -85,6 +85,7 @@ void main() {
 ''';
   changelogFile.writeAsStringSync(changelogEntry + changelogFile.readAsStringSync());
 
+  print('Updated CHANGELOG.md with new entry: $changelogEntry');
   print('Added changelog entry for version: $nextVersion+$nextBuildNumber with type "$commitType" and message: "$commitDescription"');
 
   // Stage the updated files
