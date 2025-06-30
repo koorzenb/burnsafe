@@ -1,8 +1,32 @@
 {
-  "devDependencies": {
-    "husky": "^9.1.7"
+  "name": "burnsafe",
+  "version": "1.0.0",
+  "description": "burnsafe app",
+  "keywords": [
+    "application",
+    "burnsafe"
+  ],
+  "homepage": "https://github.com/koorzenb/burnsafe#readme",
+  "bugs": {
+    "url": "https://github.com/koorzenb/burnsafe/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koorzenb/burnsafe.git"
+  },
+  "license": "GPL-3.0-only",
+  "author": "Barend Koorzen",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "flutter test"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
