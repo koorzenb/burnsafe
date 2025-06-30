@@ -49,14 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'Last Updated: ${HomescreenController.getOrPut.currentStatus!.lastUpdated.toLocal().toString().split('.')[0]}',
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
-                              GetBuilder<HomescreenController>(
-                                builder: (homeScreenController) {
-                                  return Text(
-                                    'Next Scheduled Check: ${homeScreenController.nextScheduledTime}',
-                                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                                  );
-                                },
-                              ),
                             ],
                           )
                         else
@@ -76,7 +68,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const Text('Notification Schedule', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    const Text('• Daily notifications at 2:00 PM'),
+                    GetBuilder<HomescreenController>(
+                      builder: (homeScreenController) {
+                        return Text('• Next scheduled update:  ${homeScreenController.nextScheduledTime} ');
+                      },
+                    ),
                     const Text('• Automatic status checking'),
                     const Text('• Notifications for status changes'),
                     const SizedBox(height: 16),

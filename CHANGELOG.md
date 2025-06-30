@@ -1,3 +1,9 @@
+## 0.2.2
+
+### Refactor
+
+- Moved statement to GetX Controller
+
 ## 0.2.1
 
 ### Refactor

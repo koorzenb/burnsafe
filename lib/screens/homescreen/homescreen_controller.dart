@@ -22,7 +22,7 @@ class HomescreenController extends GetxController {
 
   BurnStatus? get currentStatus => _currentStatus;
   bool get isLoading => _isLoading;
-  String get nextScheduledTime => _nextScheduledTime ?? 'Not scheduled yet';
+  String get nextScheduledTime => _nextScheduledTime ?? SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
 
   Future<void> fetchCurrentStatus() async {
     _isLoading = true;
