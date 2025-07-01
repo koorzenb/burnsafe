@@ -86,6 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            onPressed: () {
+              HomescreenController.getOrPut.rescheduleNotification();
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notifications rescheduled')));
+            },
+            tooltip: 'Reschedule Notifications',
+            heroTag: 'reschedule',
+            child: const Icon(Icons.schedule),
+          ),
           FloatingActionButton(onPressed: StatusBarService.clearStatusBar, tooltip: 'Clear Notifications', heroTag: 'clear', child: const Icon(Icons.clear)),
           const SizedBox(height: 8),
           FloatingActionButton(

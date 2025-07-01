@@ -1,72 +1,60 @@
-import 'dart:convert';
-
-import 'package:burnsafe/services/status_bar_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
-
-import '../models/burn_status.dart';
-import 'notification_service.dart';
-import 'web_scraper_service.dart';
 
 class SchedulerService {
   static const String _taskName = 'burnStatusCheck';
-  static const String _lastStatusKey = 'lastBurnStatus';
   static DateTime _target = DateTime.now();
 
   static Future<void> initialize() async {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-    await scheduleDaily2PMCheck();
+    print('Initializing WorkManager...');
+    await scheduleDailyCheck();
   }
 
-  static Future<void> scheduleDaily2PMCheck() async {
-    await Workmanager().registerPeriodicTask(
-      _taskName,
-      _taskName,
-      frequency: const Duration(hours: 24),
-      initialDelay: _getInitialDelay(),
-      constraints: Constraints(networkType: NetworkType.connected),
-    );
-  }
+  static DateTime get nextScheduledTime => _target;
 
-  static Duration _getInitialDelay() {
+  static Future<void> scheduleDailyCheck([DateTime? target]) async {
+    // Cancel all previous tasks
+    await Workmanager().cancelAll();
+
     final now = DateTime.now();
-    final target = DateTime(now.year, now.month, now.day, 9, 51); // 2 PM
+    _target = target ?? DateTime(now.year, now.month, now.day, 14, 01);
 
-    if (now.isAfter(target)) {
+    if (now.isAfter(_target)) {
       // If it's already past 2 PM today, schedule for 2 PM tomorrow
-      return target.add(const Duration(days: 1)).difference(now);
-    } else {
-      // Schedule for 2 PM today
-      return target.difference(now);
+      _target = _target.add(const Duration(days: 1));
     }
-  }
 
-  static Future<void> checkBurnStatus() async {
-    final status = await WebScraperService.fetchBurnStatus();
-    if (status != null) {
-      final prefs = await SharedPreferences.getInstance();
-      final lastStatusJson = prefs.getString(_lastStatusKey);
+    final initialDelay = _target.difference(now);
 
-      BurnStatus? lastStatus;
-      if (lastStatusJson != null) {
-        lastStatus = BurnStatus.fromJson(jsonDecode(lastStatusJson));
+    try {
+      // Schedule one-off task for the next 2 PM
+      if (initialDelay.inMinutes < 15) {
+        await Workmanager().registerOneOffTask(
+          'daily_2pm_check',
+          _taskName, // Use 'burnStatusCheck'
+          initialDelay: initialDelay,
+          constraints: Constraints(
+            networkType: NetworkType.connected,
+            requiresBatteryNotLow: false,
+            requiresCharging: false,
+            requiresDeviceIdle: false,
+            requiresStorageNotLow: false,
+          ),
+        );
       }
 
-      // Update status bar with smart notifications (includes both persistent status and dismissible alert)
-      await StatusBarService.updateStatusBar(status, lastStatus);
+      // Schedule periodic task for subsequent days (starts 24 hours from now)
+      await Workmanager().registerPeriodicTask(
+        'daily_periodic',
+        _taskName,
+        frequency: const Duration(hours: 24),
+        initialDelay: initialDelay.inMinutes > 15 ? initialDelay : const Duration(hours: 24),
+        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
+      );
 
-      // Save current status
-      await prefs.setString(_lastStatusKey, jsonEncode(status.toJson()));
+      print('Daily 2 PM task scheduled successfully');
+      print('Next execution: $_target');
+    } catch (e) {
+      print('Error scheduling daily task: $e');
     }
   }
-}
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    if (task == SchedulerService._taskName) {
-      await SchedulerService.checkBurnStatus();
-    }
-    return Future.value(true);
-  });
 }

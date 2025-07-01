@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'screens/homescreen/homescreen.dart';
 import 'services/notification_service.dart';
 import 'services/scheduler_service.dart';
+import 'storage/burn_status_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +13,8 @@ void main() async {
   // Initialize services
   await NotificationService.initialize();
   await SchedulerService.initialize();
+  await Hive.initFlutter();
+  await BurnStatusStorage.init();
   runApp(const MyApp());
 }
 

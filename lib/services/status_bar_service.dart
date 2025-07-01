@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/burn_status.dart';
+import '../storage/burn_status_storage.dart';
 import 'notification_service.dart';
 
 class StatusBarService {
   static const int _persistentNotificationId = 100;
   static const int _alertNotificationId = 200;
-  static const String _statusBarActiveKey = 'statusBarActive';
+  static const String statusBarActiveKey = 'statusBarActive';
 
   static Future<void> updateStatusBar(BurnStatus status, BurnStatus? previousStatus) async {
     // Always update persistent status
     await _showPersistentStatus(status);
 
     // Show alert if status changed or it's the daily update
-    if (previousStatus == null || previousStatus.status != status.status) {
+    if (previousStatus == null || previousStatus.statusType != status.statusType) {
       await _showStatusAlert(status, isChange: previousStatus != null);
     } else {
       // Daily update - show regular alert
@@ -24,7 +24,7 @@ class StatusBarService {
   }
 
   static Future<void> _showPersistentStatus(BurnStatus status) async {
-    Color statusColor = _getStatusColor(status.status);
+    Color statusColor = _getStatusColor(status.statusType);
 
     AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'burn_status_persistent',
@@ -48,12 +48,11 @@ class StatusBarService {
     );
 
     // Mark status bar as active
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_statusBarActiveKey, true);
+    BurnStatusStorage.box.statusBarActive = true;
   }
 
   static Future<void> _showStatusAlert(BurnStatus status, {required bool isChange}) async {
-    Color statusColor = _getStatusColor(status.status);
+    Color statusColor = _getStatusColor(status.statusType);
     String title = isChange ? 'Burn Status Changed!' : 'Daily Burn Update';
     String body = 'Halifax County: ${status.status}';
 
@@ -69,7 +68,7 @@ class StatusBarService {
       showWhen: true,
       when: DateTime.now().millisecondsSinceEpoch,
       category: AndroidNotificationCategory.alarm,
-      actions: [AndroidNotificationAction('dismiss_action', 'Dismiss', cancelNotification: true)],
+      // actions: [AndroidNotificationAction('dismiss_action', 'Dismiss', cancelNotification: true)],
     );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -86,32 +85,22 @@ class StatusBarService {
     await NotificationService.notifications.cancel(_persistentNotificationId);
     await NotificationService.notifications.cancel(_alertNotificationId);
 
-    // Mark status bar as inactive
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_statusBarActiveKey, false);
+    BurnStatusStorage.box.statusBarActive = false;
   }
 
   static Future<void> clearAlertOnly() async {
     await NotificationService.notifications.cancel(_alertNotificationId);
   }
 
-  static Future<bool> isStatusBarActive() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_statusBarActiveKey) ?? false;
-  }
-
-  static Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'no restrictions':
-      case 'status-burn':
+  static Color _getStatusColor(BurnStatusType statusType) {
+    switch (statusType) {
+      case BurnStatusType.burn:
         return Colors.green;
-      case 'restricted':
-      case 'status-restricted':
+      case BurnStatusType.restricted:
         return Colors.orange;
-      case 'prohibited':
-      case 'status-no-burn':
+      case BurnStatusType.noBurn:
         return Colors.red;
-      default:
+      case BurnStatusType.unknown:
         return Colors.grey;
     }
   }

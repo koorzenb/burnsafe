@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../models/burn_status.dart';
+import 'status_bar_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
@@ -17,8 +18,15 @@ class NotificationService {
 
     const InitializationSettings settings = InitializationSettings(android: androidSettings, iOS: iosSettings);
 
-    await _notifications.initialize(settings);
+    await _notifications.initialize(settings, onDidReceiveNotificationResponse: _onNotificationResponse);
     await _requestPermissions();
+  }
+
+  static Future<void> _onNotificationResponse(NotificationResponse response) async {
+    if (response.actionId == 'dismiss_action' || response.notificationResponseType == NotificationResponseType.selectedNotification) {
+      // Clear status bar when notification is dismissed
+      await StatusBarService.clearStatusBar();
+    }
   }
 
   static FlutterLocalNotificationsPlugin get notifications => _notifications;
@@ -45,7 +53,7 @@ class NotificationService {
 
   // Show persistent status in status bar
   static Future<void> showPersistentBurnStatus(BurnStatus status) async {
-    Color statusColor = _getStatusColor(status.status);
+    Color statusColor = _getStatusColor(status.statusType);
 
     AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'burn_status_persistent',
@@ -70,7 +78,7 @@ class NotificationService {
 
   // Show high-priority alerts for status changes
   static Future<void> showBurnStatusAlert(BurnStatus status, {bool isChange = false}) async {
-    status = BurnStatus(lastUpdated: DateTime(2023, 10, 1, 10, 11), status: "status-burn"); // Example status for testing
+    // status = BurnStatus(lastUpdated: DateTime(2023, 10, 1, 10, 11), status: 'status-burn'); // Example status for testing
 
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'burn_status_alerts',
@@ -86,15 +94,15 @@ class NotificationService {
     await _notifications.show(0, title, 'Halifax County: ${status.status}', NotificationDetails(android: androidDetails));
   }
 
-  static Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'status-burn':
+  static Color _getStatusColor(BurnStatusType statusType) {
+    switch (statusType) {
+      case BurnStatusType.burn:
         return Colors.green;
-      case 'status-restricted':
+      case BurnStatusType.restricted:
         return Colors.orange;
-      case 'status-no-burn':
+      case BurnStatusType.noBurn:
         return Colors.red;
-      default:
+      case BurnStatusType.unknown:
         return Colors.grey;
     }
   }

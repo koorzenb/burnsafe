@@ -1,3 +1,9 @@
+## 0.2.5
+
+### Refactor
+
+- updated update_version
+
 ## 0.2.4
 
 ### Refactor

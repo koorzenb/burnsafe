@@ -32,11 +32,12 @@ class HomescreenController extends GetxController {
     update();
   }
 
-  Future<void> rescheduleTask() async {
+  Future<void> rescheduleNotification() async {
     final now = DateTime.now();
     final target = DateTime(now.year, now.month, now.day, now.hour, now.minute + 16);
     await SchedulerService.scheduleDailyCheck(target);
     _nextScheduledTime = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
     ScaffoldMessenger.of(Get.context!).showSnackBar(SnackBar(content: Text('Task rescheduled ${target.hour}:${target.minute}!')));
+    update();
   }
 }
