@@ -1,4 +1,10 @@
-## 0.2.5
+## 0.3.0
+  
+  ### Chore
+  
+  - Removed npm husky in favour of using dart script
+  
+  ## 0.2.5
 
 ### Refactor
 
