@@ -80,8 +80,8 @@ String? _updatePubspecVersion(bool isNextPatch) {
     nextVersion = currentVersion.nextPatch; // Increment the patch version
     nextBuildNumber = currentBuildNumber + 1; // Increment the build number
   } else {
-    nextVersion = currentVersion.nextMinor; // Increment the minor version
-    nextBuildNumber = currentBuildNumber + 100; // Increment the build number
+    nextVersion = Version(currentVersion.major, currentVersion.minor + 1, 0);
+    nextBuildNumber = ((currentBuildNumber ~/ 100) + 1) * 100;
   }
   print('Next version: $nextVersion, Next build number: $nextBuildNumber');
 

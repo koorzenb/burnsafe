@@ -1,3 +1,4 @@
+import 'package:burnsafe/screens/homescreen/homescreen_controller.dart';
 import 'package:workmanager/workmanager.dart';
 
 class SchedulerService {
@@ -11,7 +12,7 @@ class SchedulerService {
 
   static DateTime get nextScheduledTime => _target;
 
-  static Future<void> scheduleDailyCheck([DateTime? target]) async {
+  static Future<void> scheduleDailyFetch([DateTime? target]) async {
     // Cancel all previous tasks
     await Workmanager().cancelAll();
 

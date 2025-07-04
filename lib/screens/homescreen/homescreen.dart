@@ -39,20 +39,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
                         if (homescreenController.isLoading)
                           const Center(child: CircularProgressIndicator())
-                        else if (homescreenController.currentStatus != null)
+                        else
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Status: ${HomescreenController.getOrPut.currentStatus!.status}', style: const TextStyle(fontSize: 18)),
+                              Text('Status: ${HomescreenController.getOrPut.isBurningAllowed}', style: const TextStyle(fontSize: 18)),
                               const SizedBox(height: 8),
                               Text(
-                                'Last Updated: ${HomescreenController.getOrPut.currentStatus!.lastUpdated.toLocal().toString().split('.')[0]}',
+                                'Last Updated: ${HomescreenController.getOrPut.currentStatus.lastUpdated.toLocal().toString().split('.')[0]}',
                                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                               ),
                             ],
-                          )
-                        else
-                          const Text('Unable to fetch status. Please check your internet connection.', style: TextStyle(color: Colors.red)),
+                          ),
                       ],
                     );
                   },
