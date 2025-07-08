@@ -5,6 +5,7 @@ setlocal EnableDelayedExpansion
 
 echo Running all tests...
 call flutter test
+if errorlevel 1 exit /b 1
 
 call set-build-env.bat
 

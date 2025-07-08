@@ -1,47 +1,98 @@
-import 'package:burnsafe/screens/homescreen/homescreen_logic.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../burn_status_repository.dart';
 import '../../models/burn_status.dart';
 import '../../services/scheduler_service.dart';
+import '../../services/status_bar_service.dart';
 import '../../services/web_scraper_service.dart';
+import 'homescreen_logic.dart';
 
 class HomescreenController extends GetxController {
-  BurnStatus _currentStatus = BurnStatus(statusType: BurnStatusType.unknown, lastUpdated: DateTime.now());
-  bool _isLoading = false;
-  String? _nextScheduledTime;
+  final BurnStatusRepository _repository = Get.find();
 
-  static HomescreenController get getOrPut {
+  final Rx<BurnStatus?> currentStatus = Rx<BurnStatus?>(null);
+  final RxBool isLoading = false.obs;
+  final RxString nextScheduledTime = '-'.obs;
+
+  late final StreamSubscription<BurnStatus> _statusSubscription;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _statusSubscription = _repository.watchStatus().listen((status) {
+      currentStatus.value = status;
+    });
+
+    // Load the initial status from the repository
+    _loadInitialStatus();
+    _updateScheduledTime();
+  }
+
+  @override
+  void onClose() {
+    _statusSubscription.cancel(); // Clean up the subscription
+    super.onClose();
+  }
+
+  Future<void> _loadInitialStatus() async {
+    isLoading.value = true;
+    currentStatus.value = await _repository.getStatus();
+    // If no status is in the repository, fetch it.
+    if (currentStatus.value == null) {
+      await fetchAndSaveStatus();
+    }
+    isLoading.value = false;
+  }
+
+  void _updateScheduledTime() {
+    // Assuming SchedulerService provides this information.
+    // This part might need adjustment based on SchedulerService's implementation.
+    nextScheduledTime.value = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
+  }
+
+  /// Fetches the status from the web and saves it to the repository.
+  Future<void> fetchAndSaveStatus() async {
+    isLoading.value = true;
     try {
-      return Get.find<HomescreenController>();
+      final status = await WebScraperService.fetchBurnStatus();
+      await _repository.saveStatus(status);
+      // No need to set currentStatus.value here, the stream will do it.
     } catch (e) {
-      return Get.put(HomescreenController._());
+      // Handle potential errors, e.g., show a snackbar
+      Get.snackbar('Error', 'Failed to fetch burn status: ${e.toString()}');
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  HomescreenController._() {}
+  String get isBurningAllowedText {
+    final status = currentStatus.value;
 
-  /// currentStatus is updated daily at 2pm or when the user logs in the first time. This value therefor represents the status since the last update
-  BurnStatus get currentStatus => _currentStatus;
-  String get isBurningAllowed => HomeScreenLogic.isBurningAllowed(_currentStatus, DateTime.now()) ? 'Burning Allowed' : 'No Burning Allowed';
-
-  bool get isLoading => _isLoading;
-  String get nextScheduledTime => _nextScheduledTime ?? SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
-
-  Future<void> fetchCurrentStatus() async {
-    _isLoading = true;
-    update();
-    _currentStatus = await WebScraperService.fetchBurnStatus(); // do not persist. Program can either fetch status online or return unknown if the user cannot connect
-    _isLoading = false;
-    update();
+    if (status == null) {
+      return 'No Burning Allowed';
+    } else {
+      return HomeScreenLogic.isBurningAllowed(status, DateTime.now()) ? 'Burning Allowed' : 'No Burning Allowed';
+    }
   }
 
-  Future<void> rescheduleNotification() async {
-    final now = DateTime.now();
-    final target = DateTime(now.year, now.month, now.day, now.hour, now.minute + 16);
-    await SchedulerService.scheduleDailyFetch(target);
-    _nextScheduledTime = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
-    ScaffoldMessenger.of(Get.context!).showSnackBar(SnackBar(content: Text('Task rescheduled ${target.hour}:${target.minute}!')));
-    update();
+  Color get cardColor {
+    final statusType = currentStatus.value?.statusType;
+    if (statusType == BurnStatusType.restricted) {
+      return Colors.yellow.shade700;
+    } else if (statusType == BurnStatusType.burn) {
+      return Colors.green.shade700;
+    } else if (statusType == BurnStatusType.noBurn) {
+      // Corrected from .none to .noBurn
+      return Colors.red.shade700;
+    }
+    return Colors.grey.shade700; // Default color for unknown/null status
+  }
+
+  Color get cardTextColor {
+    final statusType = currentStatus.value?.statusType;
+    return statusType == BurnStatusType.restricted ? Colors.black87 : Colors.white;
   }
 }

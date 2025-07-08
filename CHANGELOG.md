@@ -1,16 +1,27 @@
+## 0.5.0
+
+### Feat
+
+- Implement burn status management with Hive storage and background tasks
+
+### Chore
+
+- Build file exits on failure
+- update_version.dart: updates set-build-env on execution
+
 ## 0.4.0
-  
-  ### Feat
-  
-  - Added logic and tests for getting burn status
-  
-  ## 0.3.0
-  
-  ### Chore
-  
-  - Removed npm husky in favour of using dart script
-  
-  ## 0.2.5
+
+### Feat
+
+- Added logic and tests for getting burn status
+
+## 0.3.0
+
+### Chore
+
+- Removed npm husky in favour of using dart script
+
+## 0.2.5
 
 ### Refactor
 

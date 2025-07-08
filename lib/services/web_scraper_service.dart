@@ -7,7 +7,7 @@ import '../models/burn_status.dart';
 class WebScraperService {
   static const String _baseUrl = 'https://novascotia.ca/burnsafe';
 
-  static Future<BurnStatus?> fetchBurnStatus() async {
+  static Future<BurnStatus> fetchBurnStatus() async {
     try {
       final response = await http.get(Uri.parse(_baseUrl), headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'});
 
@@ -22,13 +22,13 @@ class WebScraperService {
           if (statusCell != null) {
             final status = statusCell.attributes['class']?.trim() ?? 'status-no-burn';
             debugPrint('Fetched burn status: $status');
-            return BurnStatus(status: status, lastUpdated: DateTime.now());
+            return BurnStatus.fromString(status: status, lastUpdated: DateTime.now());
           }
         }
       }
     } catch (e) {
       print('Error fetching burn status: $e');
     }
-    return null;
+    return BurnStatus(statusType: BurnStatusType.unknown, lastUpdated: DateTime.now());
   }
 }
