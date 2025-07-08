@@ -1,4 +1,10 @@
-## 0.5.1
+## 0.5.2
+  
+  ### Refactor
+  
+  - Refactor burn status handling and improve status color management
+  
+  ## 0.5.1
   
   ### Chore
   

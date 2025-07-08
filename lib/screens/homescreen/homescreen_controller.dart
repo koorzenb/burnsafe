@@ -79,16 +79,7 @@ class HomescreenController extends GetxController {
   }
 
   Color get cardColor {
-    final statusType = currentStatus.value?.statusType;
-    if (statusType == BurnStatusType.restricted) {
-      return Colors.yellow.shade700;
-    } else if (statusType == BurnStatusType.burn) {
-      return Colors.green.shade700;
-    } else if (statusType == BurnStatusType.noBurn) {
-      // Corrected from .none to .noBurn
-      return Colors.red.shade700;
-    }
-    return Colors.grey.shade700; // Default color for unknown/null status
+    return currentStatus.value?.statusType.color ?? Colors.grey.shade700;
   }
 
   Color get cardTextColor {

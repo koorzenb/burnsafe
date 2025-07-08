@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../models/burn_status.dart';
-import '../storage/burn_status_storage.dart';
 import 'notification_service.dart';
 
 class StatusBarService {
@@ -24,7 +23,7 @@ class StatusBarService {
   }
 
   static Future<void> _showPersistentStatus(BurnStatus status) async {
-    Color statusColor = _getStatusColor(status.statusType);
+    Color statusColor = status.statusType.color;
 
     AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'burn_status_persistent',
@@ -46,13 +45,10 @@ class StatusBarService {
       'Burn Status: ${status.status}',
       NotificationDetails(android: androidDetails),
     );
-
-    // Mark status bar as active
-    BurnStatusStorage.box.statusBarActive = true;
   }
 
   static Future<void> _showStatusAlert(BurnStatus status, {required bool isChange}) async {
-    Color statusColor = _getStatusColor(status.statusType);
+    Color statusColor = status.statusType.color;
     String title = isChange ? 'Burn Status Changed!' : 'Daily Burn Update';
     String body = 'Halifax County: ${status.status}';
 
@@ -84,24 +80,9 @@ class StatusBarService {
   static Future<void> clearStatusBar() async {
     await NotificationService.notifications.cancel(_persistentNotificationId);
     await NotificationService.notifications.cancel(_alertNotificationId);
-
-    BurnStatusStorage.box.statusBarActive = false;
   }
 
   static Future<void> clearAlertOnly() async {
     await NotificationService.notifications.cancel(_alertNotificationId);
-  }
-
-  static Color _getStatusColor(BurnStatusType statusType) {
-    switch (statusType) {
-      case BurnStatusType.burn:
-        return Colors.green;
-      case BurnStatusType.restricted:
-        return Colors.orange;
-      case BurnStatusType.noBurn:
-        return Colors.red;
-      case BurnStatusType.unknown:
-        return Colors.grey;
-    }
   }
 }
