@@ -1,4 +1,10 @@
-## 0.5.0
+## 0.5.1
+  
+  ### Chore
+  
+  - updated semantic version logic
+  
+  ## 0.5.0
 
 ### Feat
 

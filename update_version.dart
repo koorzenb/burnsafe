@@ -29,7 +29,7 @@ void main() {
     commitDescription = commitParts.group(2)!.trim();
   }
 
-  final nextVersion = _updatePubspecVersion(commitType == 'fix' || commitType == 'bug' || commitType == 'ref');
+  final nextVersion = _updatePubspecVersion(commitType == 'fix' || commitType == 'bug' || commitType == 'ref' || commitType == 'docs' || commitType == 'chore');
   _updateChangelog(nextVersion, commitType, commitDescription, changelogFile);
   _commitChanges(commitMessage);
 }
@@ -71,13 +71,15 @@ String? _updatePubspecVersion(bool isNextPatch) {
 
   // Determine next version based on commit type
   Version nextVersion;
-  int nextBuildNumber;
+  String nextBuildNumber;
   if (isNextPatch) {
-    nextVersion = currentVersion.nextPatch; // Increment the patch version
-    nextBuildNumber = currentBuildNumber + 1; // Increment the build number
+    nextVersion = currentVersion.nextPatch;
+    nextBuildNumber = '${currentBuildNumber + 1}';
+    print('Incrementing patch version: $nextVersion, build number: $nextBuildNumber');
   } else {
     nextVersion = Version(currentVersion.major, currentVersion.minor + 1, 0);
-    nextBuildNumber = ((currentBuildNumber ~/ 100) + 1) * 100;
+    nextBuildNumber = '00${((currentBuildNumber ~/ 100) + 1) * 100}'; // manually update this for major releases
+    print('Incrementing patch version: $nextVersion, build number: $nextBuildNumber');
   }
 
   // Update pubspec.yaml with new version and build number
@@ -85,7 +87,7 @@ String? _updatePubspecVersion(bool isNextPatch) {
   pubspecFile.writeAsStringSync(updatedPubspecContent);
   print('Updated pubspec.yaml to version: $nextVersion+$nextBuildNumber');
 
-  _updateBuildEnv(nextBuildNumber, nextVersion);
+  _updateBuildEnv(int.parse(nextBuildNumber), nextVersion);
   return nextVersion.toString();
 }
 
@@ -96,6 +98,8 @@ void _updateBuildEnv(int nextBuildNumber, Version nextVersion) {
     print('Warning: set-build-env.bat not found, skipping batch file update');
     return;
   }
+
+  // .. test
 
   final buildEnvContent = buildEnvFile.readAsStringSync();
   final formattedBuildNumber = nextBuildNumber.toString().padLeft(5, '0');
