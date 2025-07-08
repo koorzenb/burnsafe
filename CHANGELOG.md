@@ -1,4 +1,10 @@
-## 0.5.2
+## 0.6.0
+  
+  ### Feat
+  
+  - Enhance fetchAndSaveStatus method to control notification display and update status bar handling
+  
+  ## 0.5.2
   
   ### Refactor
   

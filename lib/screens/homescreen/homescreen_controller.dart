@@ -54,12 +54,15 @@ class HomescreenController extends GetxController {
   }
 
   /// Fetches the status from the web and saves it to the repository.
-  Future<void> fetchAndSaveStatus() async {
+  Future<void> fetchAndSaveStatus([bool shouldShowNotification = true]) async {
     isLoading.value = true;
     try {
       final status = await WebScraperService.fetchBurnStatus();
       await _repository.saveStatus(status);
-      // No need to set currentStatus.value here, the stream will do it.
+
+      if (shouldShowNotification) {
+        await StatusBarService.showPersistentNotification(status);
+      }
     } catch (e) {
       // Handle potential errors, e.g., show a snackbar
       Get.snackbar('Error', 'Failed to fetch burn status: ${e.toString()}');

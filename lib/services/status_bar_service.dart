@@ -7,11 +7,17 @@ import 'notification_service.dart';
 class StatusBarService {
   static const int _persistentNotificationId = 100;
   static const int _alertNotificationId = 200;
-  static const String statusBarActiveKey = 'statusBarActive';
+
+  /// Checks if the persistent status bar notification is currently active.
+  /// This is the single source of truth.
+  static Future<bool> isPersistentNotificationActive() async {
+    final activeNotifications = await NotificationService.notifications.getActiveNotifications();
+    return activeNotifications.any((n) => n.id == _persistentNotificationId);
+  }
 
   static Future<void> updateStatusBar(BurnStatus status, BurnStatus? previousStatus) async {
     // Always update persistent status
-    await _showPersistentStatus(status);
+    await showPersistentNotification(status);
 
     // Show alert if status changed or it's the daily update
     if (previousStatus == null || previousStatus.statusType != status.statusType) {
@@ -22,7 +28,7 @@ class StatusBarService {
     }
   }
 
-  static Future<void> _showPersistentStatus(BurnStatus status) async {
+  static Future<void> showPersistentNotification(BurnStatus status) async {
     Color statusColor = status.statusType.color;
 
     AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
@@ -34,7 +40,7 @@ class StatusBarService {
       ongoing: true,
       autoCancel: false,
       showWhen: false,
-      icon: '@drawable/burn_status_icon',
+      icon: 'burn_status_icon',
       color: statusColor,
       category: AndroidNotificationCategory.status,
     );
@@ -58,7 +64,7 @@ class StatusBarService {
       channelDescription: 'Important burn status updates',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@drawable/alert_icon',
+      icon: 'alert_icon',
       color: statusColor,
       autoCancel: true,
       showWhen: true,

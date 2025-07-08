@@ -4,31 +4,37 @@ import '../burn_status_repository.dart';
 import '../models/burn_status.dart';
 import '../storage/burn_status_adapter.dart';
 import '../storage/burn_status_hive_repository.dart';
+import '../storage/burn_status_type_adapter.dart';
+import 'notification_service.dart';
+import 'status_bar_service.dart';
 import 'web_scraper_service.dart';
 
 /// This class is responsible for handling the execution of background tasks.
 /// It is completely decoupled from the UI.
 class BackgroundTaskHandler {
-  /// Fetches the current burn status and saves it to the repository.
   /// This method is designed to be called from a background isolate.
   static Future<bool> fetchAndSaveStatus() async {
-    print('Background Task: Initializing Hive...');
-    // Must initialize Hive and register adapters within the background isolate.
     await Hive.initFlutter();
+    await NotificationService.initialize();
+
     if (!Hive.isAdapterRegistered(BurnStatusAdapter().typeId)) {
       Hive.registerAdapter(BurnStatusAdapter());
     }
+    if (!Hive.isAdapterRegistered(BurnStatusTypeAdapter().typeId)) {
+      Hive.registerAdapter(BurnStatusTypeAdapter());
+    }
 
-    print('Background Task: Opening Box...');
     final box = await Hive.openBox<BurnStatus>('burnStatusBox');
     final BurnStatusRepository repository = BurnStatusHiveRepository(box);
 
+    BurnStatus? previousStatus;
     try {
-      print('Background Task: Fetching status from web...'); // TODO: remove prints
-      final status = await WebScraperService.fetchBurnStatus();
-      print('Background Task: Saving status to repository...');
-      await repository.saveStatus(status);
-      print('Background Task: Successfully fetched and saved status.');
+      previousStatus = await repository.getStatus();
+      print('Background Task: Fetching status from web...');
+      final newStatus = await WebScraperService.fetchBurnStatus();
+      await repository.saveStatus(newStatus);
+      print('Background Task: Updating status bar notification...');
+      await StatusBarService.updateStatusBar(newStatus, previousStatus);
       return true;
     } catch (e) {
       print('Background Task: Error fetching status: $e');

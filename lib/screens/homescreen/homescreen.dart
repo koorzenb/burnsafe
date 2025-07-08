@@ -76,7 +76,12 @@ class HomeScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Refresh button now calls the instance method
-          FloatingActionButton(onPressed: controller.fetchAndSaveStatus, tooltip: 'Refresh Status', heroTag: 'refresh', child: const Icon(Icons.refresh)),
+          FloatingActionButton(
+            onPressed: () => controller.fetchAndSaveStatus(false),
+            tooltip: 'Refresh Status',
+            heroTag: 'refresh',
+            child: const Icon(Icons.refresh),
+          ),
         ],
       ),
     );
