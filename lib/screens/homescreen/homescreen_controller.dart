@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import '../../burn_status_repository.dart';
 import '../../models/burn_status.dart';
 import '../../services/scheduler_service.dart';
-import '../../services/status_bar_service.dart';
 import '../../services/web_scraper_service.dart';
 import 'homescreen_logic.dart';
 

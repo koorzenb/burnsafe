@@ -1,4 +1,10 @@
-## 0.5.0
+## 0.5.1
+  
+  ### Refactor
+  
+  - Added debug code to avoid real API calls during debug session
+  
+  ## 0.5.0
 
 ### Feat
 

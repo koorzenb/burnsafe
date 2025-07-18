@@ -8,6 +8,12 @@ class WebScraperService {
   static const String _baseUrl = 'https://novascotia.ca/burnsafe';
 
   static Future<BurnStatus> fetchBurnStatus() async {
+    if (kDebugMode) {
+      print('Mocking web scraping for burn status');
+      final now = DateTime.now();
+      return BurnStatus(statusType: now.minute % 2 == 0 ? BurnStatusType.burn : BurnStatusType.restricted, lastUpdated: now);
+    }
+
     try {
       final response = await http.get(Uri.parse(_baseUrl), headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'});
 
@@ -20,9 +26,10 @@ class WebScraperService {
         if (halifaxRow != null) {
           final statusCell = halifaxRow.querySelector('td');
           if (statusCell != null) {
-            final status = statusCell.attributes['class']?.trim() ?? 'status-no-burn';
-            debugPrint('Fetched burn status: $status');
-            return BurnStatus.fromString(status: status, lastUpdated: DateTime.now());
+            final statusString = statusCell.attributes['class']?.trim() ?? 'status-no-burn';
+            debugPrint('Fetched burn status string: $statusString');
+            final statusType = _parseStatusFromString(statusString);
+            return BurnStatus(statusType: statusType, lastUpdated: DateTime.now());
           }
         }
       }
@@ -30,5 +37,20 @@ class WebScraperService {
       print('Error fetching burn status: $e');
     }
     return BurnStatus(statusType: BurnStatusType.unknown, lastUpdated: DateTime.now());
+  }
+
+  /// Parses the raw string from the website into a BurnStatusType enum.
+  /// This logic is now correctly encapsulated within the service.
+  static BurnStatusType _parseStatusFromString(String status) {
+    switch (status.toLowerCase()) {
+      case 'status-burn':
+        return BurnStatusType.burn;
+      case 'status-restricted':
+        return BurnStatusType.restricted;
+      case 'status-no-burn':
+        return BurnStatusType.noBurn;
+      default:
+        return BurnStatusType.unknown;
+    }
   }
 }
