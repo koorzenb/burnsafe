@@ -1,4 +1,10 @@
-## 0.5.1
+## 0.6.0
+  
+  ### Feat
+  
+  - Added timer to automatically manage state
+  
+  ## 0.5.1
   
   ### Refactor
   

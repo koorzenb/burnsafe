@@ -11,10 +11,13 @@ import 'homescreen_logic.dart';
 
 class HomescreenController extends GetxController {
   final BurnStatusRepository _repository = Get.find();
-
+  Timer? _timer;
   final Rx<BurnStatus?> currentStatus = Rx<BurnStatus?>(null);
   final RxBool isLoading = false.obs;
   final RxString nextScheduledTime = '-'.obs;
+  Rx<Color> backgroundColor = Rx<Color>(Colors.grey.shade700);
+  Rx<Color> textColor = Rx<Color>(Colors.grey.shade700);
+  Rx<String> isBurningAllowedText = Rx<String>('Fetching data... ');
 
   late final StreamSubscription<BurnStatus> _statusSubscription;
 
@@ -25,31 +28,21 @@ class HomescreenController extends GetxController {
       currentStatus.value = status;
     });
 
-    // Load the initial status from the repository
     _loadInitialStatus();
     _updateScheduledTime();
   }
 
   @override
+  void onReady() {
+    super.onReady();
+    _startTimer();
+  }
+
+  @override
   void onClose() {
-    _statusSubscription.cancel(); // Clean up the subscription
+    _statusSubscription.cancel();
+    _timer?.cancel();
     super.onClose();
-  }
-
-  Future<void> _loadInitialStatus() async {
-    isLoading.value = true;
-    currentStatus.value = await _repository.getStatus();
-    // If no status is in the repository, fetch it.
-    if (currentStatus.value == null) {
-      await fetchAndSaveStatus();
-    }
-    isLoading.value = false;
-  }
-
-  void _updateScheduledTime() {
-    // Assuming SchedulerService provides this information.
-    // This part might need adjustment based on SchedulerService's implementation.
-    nextScheduledTime.value = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
   }
 
   /// Fetches the status from the web and saves it to the repository.
@@ -60,14 +53,40 @@ class HomescreenController extends GetxController {
       await _repository.saveStatus(status);
       // No need to set currentStatus.value here, the stream will do it.
     } catch (e) {
-      // Handle potential errors, e.g., show a snackbar
       Get.snackbar('Error', 'Failed to fetch burn status: ${e.toString()}');
     } finally {
       isLoading.value = false;
     }
   }
 
-  String get isBurningAllowedText {
+  Future<void> _loadInitialStatus() async {
+    isLoading.value = true;
+    currentStatus.value = await _repository.getStatus();
+
+    if (currentStatus.value == null) {
+      await fetchAndSaveStatus();
+    }
+
+    isLoading.value = false;
+  }
+
+  void _updateUI() {
+    backgroundColor.value = _getCardColor();
+    textColor.value = _getCardTextColor();
+    isBurningAllowedText.value = _getIsBurningAllowedText();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 10), (timer) {
+      _updateUI();
+    });
+  }
+
+  void _updateScheduledTime() {
+    nextScheduledTime.value = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
+  }
+
+  String _getIsBurningAllowedText() {
     final status = currentStatus.value;
 
     if (status == null) {
@@ -77,20 +96,20 @@ class HomescreenController extends GetxController {
     }
   }
 
-  Color get cardColor {
+  Color _getCardColor() {
     final statusType = currentStatus.value?.statusType;
+
     if (statusType == BurnStatusType.restricted) {
       return Colors.yellow.shade700;
     } else if (statusType == BurnStatusType.burn) {
       return Colors.green.shade700;
     } else if (statusType == BurnStatusType.noBurn) {
-      // Corrected from .none to .noBurn
       return Colors.red.shade700;
     }
-    return Colors.grey.shade700; // Default color for unknown/null status
+    return Colors.grey.shade700;
   }
 
-  Color get cardTextColor {
+  Color _getCardTextColor() {
     final statusType = currentStatus.value?.statusType;
     return statusType == BurnStatusType.restricted ? Colors.black87 : Colors.white;
   }
