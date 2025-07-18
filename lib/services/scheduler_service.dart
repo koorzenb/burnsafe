@@ -124,32 +124,3 @@ class SchedulerService {
     }
   }
 }
-
-@pragma('vm:entry-point')
-void _callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    final instance = Get.find<HomescreenController>();
-    if (task == 'homescreen_refresh_8am' || task == 'homescreen_refresh_2_03pm' || task == 'homescreen_refresh_7pm') {
-      await instance.onPeriodicUpdate();
-      print('Homescreen refreshed at ${DateTime.now()}');
-    }
-
-    if (task == 'homescreen_pause_2pm') {
-      instance.onPauseStatus();
-      print('Homescreen paused at ${DateTime.now()}');
-    }
-
-    if (task == 'my_periodic_task' || task == 'my_once_off_task') {
-      await instance.fetchCurrentStatus();
-      // await instance.onPeriodicUpdate();
-      print('Refresh executed at ${DateTime.now()}');
-    }
-
-    if (task == 'once_off_2pm_check' || task == 'daily_2pm_check') {
-      await WebScraperService.fetchBurnStatus();
-      print('Fetching of burn status executed at ${DateTime.now()}');
-    }
-
-    return Future.value(true);
-  });
-}

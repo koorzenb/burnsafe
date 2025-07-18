@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../models/burn_status.dart';
-import '../storage/burn_status_storage.dart';
 import 'notification_service.dart';
 
 class StatusBarService {
@@ -46,9 +45,6 @@ class StatusBarService {
       'Burn Status: ${status.status}',
       NotificationDetails(android: androidDetails),
     );
-
-    // Mark status bar as active
-    BurnStatusStorage.box.statusBarActive = true;
   }
 
   static Future<void> _showStatusAlert(BurnStatus status, {required bool isChange}) async {
@@ -84,8 +80,6 @@ class StatusBarService {
   static Future<void> clearStatusBar() async {
     await NotificationService.notifications.cancel(_persistentNotificationId);
     await NotificationService.notifications.cancel(_alertNotificationId);
-
-    BurnStatusStorage.box.statusBarActive = false;
   }
 
   static Future<void> clearAlertOnly() async {

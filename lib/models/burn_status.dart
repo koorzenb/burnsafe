@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
 @HiveType(typeId: 0)
@@ -10,18 +11,7 @@ class BurnStatus {
 
   BurnStatus({required this.statusType, required this.lastUpdated});
 
-  String get status {
-    switch (statusType) {
-      case BurnStatusType.burn:
-        return 'Burning Allowed';
-      case BurnStatusType.restricted:
-        return 'Burning Restricted';
-      case BurnStatusType.noBurn:
-        return 'No Burning Allowed';
-      case BurnStatusType.unknown:
-        return 'Unknown Status';
-    }
-  }
+  String get status => statusType.displayName;
 }
 
 @HiveType(typeId: 1)
@@ -34,4 +24,32 @@ enum BurnStatusType {
   noBurn,
   @HiveField(3)
   unknown,
+}
+
+extension BurnStatusTypeInfo on BurnStatusType {
+  String get displayName {
+    switch (this) {
+      case BurnStatusType.burn:
+        return 'Burning Allowed';
+      case BurnStatusType.restricted:
+        return 'Burning Restricted';
+      case BurnStatusType.noBurn:
+        return 'No Burning Allowed';
+      default:
+        return 'Unknown Status';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case BurnStatusType.burn:
+        return Colors.green.shade700;
+      case BurnStatusType.restricted:
+        return Colors.yellow.shade700;
+      case BurnStatusType.noBurn:
+        return Colors.red.shade700;
+      default:
+        return Colors.grey.shade700;
+    }
+  }
 }
