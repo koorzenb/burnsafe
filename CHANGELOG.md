@@ -1,4 +1,10 @@
-## 0.6.1
+## 0.6.2
+  
+  ### Refactor
+  
+  - Enhance burn status management with improved logic and notifications
+  
+  ## 0.6.1
   
   ### Bug
   
