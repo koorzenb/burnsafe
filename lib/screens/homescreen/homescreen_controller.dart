@@ -7,7 +7,7 @@ import '../../burn_status_repository.dart';
 import '../../models/burn_status.dart';
 import '../../services/scheduler_service.dart';
 import '../../services/web_scraper_service.dart';
-import 'homescreen_logic.dart';
+import 'burn_logic_service.dart';
 
 class HomescreenController extends GetxController {
   final BurnStatusRepository _repository = Get.find();
@@ -92,7 +92,7 @@ class HomescreenController extends GetxController {
     if (status == null) {
       return 'No Burning Allowed';
     } else {
-      return HomeScreenLogic.isBurningAllowed(status, DateTime.now()) ? 'Burning Allowed' : 'No Burning Allowed';
+      return BurnLogicService.isBurningAllowed(status, DateTime.now()) ? 'Burning Allowed' : 'No Burning Allowed';
     }
   }
 

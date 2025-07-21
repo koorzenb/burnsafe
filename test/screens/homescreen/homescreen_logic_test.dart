@@ -1,5 +1,5 @@
 import 'package:burnsafe/models/burn_status.dart';
-import 'package:burnsafe/screens/homescreen/homescreen_logic.dart';
+import 'package:burnsafe/screens/homescreen/burn_logic_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -13,30 +13,30 @@ void main() {
       final previousDay = DateTime(startOfDay.year, startOfDay.month, startOfDay.day - 1, 14);
       final currentStatus = BurnStatus(statusType: BurnStatusType.restricted, lastUpdated: previousDay);
 
-      bool isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, DateTime(startOfDay.year, startOfDay.month, startOfDay.day));
+      bool isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, DateTime(startOfDay.year, startOfDay.month, startOfDay.day));
       expect(isBurningAllowed, isTrue, reason: 'Should return whatever the current status is before 8am');
 
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, today8am.subtract(Duration(minutes: 1)));
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, today8am.subtract(Duration(minutes: 1)));
       expect(isBurningAllowed, isTrue, reason: 'Should return whatever the current status is before 8am');
     });
 
     test('should return false between 8am and 2pm', () {
       final currentStatus = BurnStatus(statusType: BurnStatusType.restricted, lastUpdated: today8am);
 
-      bool isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, today8am);
+      bool isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, today8am);
       expect(isBurningAllowed, isFalse, reason: 'Should not allow burning between 8am and 2pm');
 
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, today2pm.subtract(Duration(seconds: 1)));
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, today2pm.subtract(Duration(seconds: 1)));
       expect(isBurningAllowed, isFalse, reason: 'Should not allow burning between 8am and 2pm');
     });
 
     test('should return true after 2pm and before 7pm and burnStatus is burn', () {
       final currentStatus = BurnStatus(statusType: BurnStatusType.burn, lastUpdated: today2pm);
 
-      bool isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, today2pm);
+      bool isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, today2pm);
       expect(isBurningAllowed, isTrue, reason: 'Should allow burning after 2pm and before 7pm if status is burn');
 
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, today7pm.subtract(Duration(seconds: 1)));
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, today7pm.subtract(Duration(seconds: 1)));
       expect(isBurningAllowed, isTrue, reason: 'Should allow burning after 2pm and before 7pm if status is burn');
     });
 
@@ -44,24 +44,24 @@ void main() {
       final currentStatusRestricted = BurnStatus(statusType: BurnStatusType.restricted, lastUpdated: today2pm);
       final currentStatusNoBurn = BurnStatus(statusType: BurnStatusType.noBurn, lastUpdated: today2pm);
 
-      bool isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatusRestricted, today2pm);
+      bool isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatusRestricted, today2pm);
       expect(isBurningAllowed, isFalse, reason: 'Should not allow burning after 2pm and before 7pm if status is restricted');
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatusNoBurn, today2pm);
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatusNoBurn, today2pm);
       expect(isBurningAllowed, isFalse, reason: 'Should not allow burning after 2pm and before 7pm if status is restricted');
 
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatusRestricted, today7pm.subtract(Duration(seconds: 1)));
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatusRestricted, today7pm.subtract(Duration(seconds: 1)));
       expect(isBurningAllowed, isFalse, reason: 'Should not allow burning after 2pm and before 7pm if status is noBurn');
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatusNoBurn, today7pm.subtract(Duration(seconds: 1)));
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatusNoBurn, today7pm.subtract(Duration(seconds: 1)));
       expect(isBurningAllowed, isFalse, reason: 'Should not allow burning after 2pm and before 7pm if status is noBurn');
     });
 
     test('should return currentStatus after 7pm', () {
       BurnStatus currentStatus = BurnStatus(statusType: BurnStatusType.restricted, lastUpdated: today2pm);
-      bool isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, today7pm);
+      bool isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, today7pm);
       expect(isBurningAllowed, isTrue, reason: 'Should return whatever the current status is before 8am');
 
       currentStatus = BurnStatus(statusType: BurnStatusType.noBurn, lastUpdated: today2pm);
-      isBurningAllowed = HomeScreenLogic.isBurningAllowed(currentStatus, startOfDay.add(Duration(days: 1)).subtract(Duration(seconds: 1))); // end of day
+      isBurningAllowed = BurnLogicService.isBurningAllowed(currentStatus, startOfDay.add(Duration(days: 1)).subtract(Duration(seconds: 1))); // end of day
       expect(isBurningAllowed, isFalse, reason: 'Should return whatever the current status is before 8am');
     });
   });

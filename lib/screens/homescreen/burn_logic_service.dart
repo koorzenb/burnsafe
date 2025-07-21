@@ -1,6 +1,6 @@
 import '../../models/burn_status.dart';
 
-class HomeScreenLogic {
+class BurnLogicService {
   BurnStatus? _currentStatus;
 
   get currentStatus => _currentStatus;
