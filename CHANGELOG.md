@@ -1,4 +1,10 @@
-## 0.6.2
+## 0.7.0
+  
+  ### Chore
+  
+  - Add test execution before version update to ensure stability
+  
+  ## 0.6.2
   
   ### Refactor
   
