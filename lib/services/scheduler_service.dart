@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'background_task_handler.dart';
@@ -17,15 +18,26 @@ class SchedulerService {
 
   static Future<void> initialize() async {
     print('Initializing WorkManager...');
-    await Workmanager().initialize(_callbackDispatcher, isInDebugMode: false);
-    await scheduleDailyFetch();
+
+    if (kDebugMode) {
+      await Workmanager().initialize(
+        _callbackDispatcher,
+        isInDebugMode: true,
+      ); // this creates a workmanager and defines the callback dispatcher, but no recurring task has yet been created
+      await scheduleOnceOffTask(); // for testing purposes, we can schedule a one-off task
+    } else {
+      await Workmanager().initialize(
+        _callbackDispatcher,
+        isInDebugMode: false,
+      ); // this creates a workmanager and defines the callback dispatcher, but no recurring task has yet been created
+      await scheduleDailyFetch(); // this schedules the recurring task
+    }
   }
 
   static DateTime get nextScheduledTime => _target;
 
   static Future<void> scheduleDailyFetch([DateTime? target]) async {
-    final workManager = Workmanager();
-    await workManager.cancelAll();
+    await Workmanager().cancelAll();
 
     final now = DateTime.now();
     _target = target ?? DateTime(now.year, now.month, now.day, 14, 0);
@@ -37,7 +49,7 @@ class SchedulerService {
     final initialDelay = _target.difference(now);
 
     try {
-      await workManager.registerPeriodicTask(
+      await Workmanager().registerPeriodicTask(
         'daily_2pm_check',
         _taskName,
         frequency: const Duration(days: 1),
@@ -53,103 +65,31 @@ class SchedulerService {
     }
   }
 
-  static Future<void> _schedulePeriodicHomescreenRefresh() async {
-    // create smaller periodic tasks that does a screen update at 8am, 2pm, 2:02pm and 7pm
-    try {
-      await Workmanager().registerPeriodicTask(
-        'homescreen_refresh_8am',
-        'homescreen_refresh_8am', // TODO: consider general task type here for all tasks
-        frequency: const Duration(hours: 24),
-        initialDelay: _getInitialDelayForTime(8, 0),
-        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
-      );
+  static Future<void> scheduleOnceOffTask() async {
+    await Workmanager().cancelAll();
 
-      await Workmanager().registerPeriodicTask(
-        'homescreen_pause_2pm',
-        'homescreen_pause_2pm',
-
-        frequency: const Duration(hours: 24),
-        initialDelay: _getInitialDelayForTime(14, 0),
-        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
-      );
-
-      await Workmanager().registerPeriodicTask(
-        'my_periodic_task',
-        'my_periodic_task',
-        frequency: const Duration(hours: 24),
-        initialDelay: Duration(minutes: 15, seconds: 30),
-        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
-      );
-      print('Periodic refresh job task scheduled for ${DateTime.now().add(const Duration(minutes: 15, seconds: 30))}');
-
-      await Workmanager().registerOneOffTask(
-        'my_once_off_task',
-        'my_once_off_task',
-        initialDelay: Duration(seconds: 30),
-        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
-      );
-      print('One-off refresh job task scheduled for ${DateTime.now().add(const Duration(seconds: 30))}');
-
-      await Workmanager().registerPeriodicTask(
-        'homescreen_refresh_2_03pm',
-        'homescreen_refresh_2_03pm',
-        frequency: const Duration(hours: 24),
-        initialDelay: _getInitialDelayForTime(14, 2),
-        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
-      );
-
-      await Workmanager().registerPeriodicTask(
-        'homescreen_refresh_7pm',
-        'homescreen_refresh_7pm',
-        frequency: const Duration(hours: 24),
-        initialDelay: _getInitialDelayForTime(19, 0),
-        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
-      );
-
-      print('Periodic (refresh) tasks scheduled successfully');
-    } catch (e) {
-      print('Error scheduling periodic homescreen refresh tasks: $e');
-    }
-  }
-
-  static Duration _getInitialDelayForTime(int hour, int minute) {
     final now = DateTime.now();
-    final target = DateTime(now.year, now.month, now.day, hour, minute);
+    print('Now: $now');
+    final plusFifteenSeconds = now.add(const Duration(seconds: 15));
+    _target = DateTime(now.year, now.month, now.day, now.hour, now.minute, plusFifteenSeconds.second);
+    print('Target: $_target');
 
-    if (now.isAfter(target)) {
-      // If the target time has already passed today, schedule for tomorrow
-      return target.add(const Duration(days: 1)).difference(now);
-    } else {
-      return target.difference(now);
+    final initialDelay = _target.difference(now);
+    print('Initial delay: $initialDelay');
+
+    try {
+      await Workmanager().registerOneOffTask(
+        'once_off_task',
+        'once_off_task',
+        initialDelay: initialDelay,
+        constraints: Constraints(networkType: NetworkType.connected, requiresBatteryNotLow: false),
+        backoffPolicy: BackoffPolicy.linear,
+      );
+
+      print('Once off task scheduled successfully');
+      print('Next execution: ${_target}');
+    } catch (e) {
+      print('Error scheduling daily task: $e');
     }
   }
-}
-
-@pragma('vm:entry-point')
-void _callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    final instance = Get.find<HomescreenController>();
-    if (task == 'homescreen_refresh_8am' || task == 'homescreen_refresh_2_03pm' || task == 'homescreen_refresh_7pm') {
-      await instance.onPeriodicUpdate();
-      print('Homescreen refreshed at ${DateTime.now()}');
-    }
-
-    if (task == 'homescreen_pause_2pm') {
-      instance.onPauseStatus();
-      print('Homescreen paused at ${DateTime.now()}');
-    }
-
-    if (task == 'my_periodic_task' || task == 'my_once_off_task') {
-      await instance.fetchCurrentStatus();
-      // await instance.onPeriodicUpdate();
-      print('Refresh executed at ${DateTime.now()}');
-    }
-
-    if (task == 'once_off_2pm_check' || task == 'daily_2pm_check') {
-      await WebScraperService.fetchBurnStatus();
-      print('Fetching of burn status executed at ${DateTime.now()}');
-    }
-
-    return Future.value(true);
-  });
 }

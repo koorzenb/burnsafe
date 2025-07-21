@@ -1,8 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../models/burn_status.dart';
 import 'status_bar_service.dart';
 
 class NotificationService {
@@ -35,75 +33,26 @@ class NotificationService {
     await Permission.notification.request();
   }
 
-  static Future<void> showBurnStatusNotification(BurnStatus status) async {
+  /// Shows a notification specifically when burning becomes allowed.
+  static Future<void> showBurningAllowedNotification() async {
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'burn_status_channel',
-      'Burn Status Updates',
-      channelDescription: 'Daily burn status notifications for Halifax County',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(presentAlert: true, presentBadge: true, presentSound: true);
-
-    const NotificationDetails details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-
-    await _notifications.show(0, 'Halifax County Burn Status', 'Current status: ${status.status}', details);
-  }
-
-  // Show persistent status in status bar
-  static Future<void> showPersistentBurnStatus(BurnStatus status) async {
-    Color statusColor = _getStatusColor(status.statusType);
-
-    AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'burn_status_persistent',
-      'Current Burn Status',
-      channelDescription: 'Always shows current burn status',
-      importance: Importance.low,
-      priority: Priority.low,
-      ongoing: true,
-      autoCancel: false,
-      showWhen: false,
-      icon: '@drawable/burn_status_icon',
-      color: statusColor,
+      'burn_allowed_channel',
+      'Burning Allowed Alerts',
+      channelDescription: 'Notifications for when burn status changes to allowed.',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+      icon: 'burn_status_icon',
+      sound: RawResourceAndroidNotificationSound('fire'),
+      playSound: true,
+      ongoing: false, // User can dismiss by swiping
+      autoCancel: true, // Dismisses when tapped
     );
 
     await _notifications.show(
-      1, // Different ID from alerts
-      'Halifax County',
-      status.status,
-      NotificationDetails(android: androidDetails),
+      0,
+      'Burning Now Allowed',
+      'The burn status for Halifax County has changed. You may now burn.',
+      const NotificationDetails(android: androidDetails),
     );
-  }
-
-  // Show high-priority alerts for status changes
-  static Future<void> showBurnStatusAlert(BurnStatus status, {bool isChange = false}) async {
-    // status = BurnStatus(lastUpdated: DateTime(2023, 10, 1, 10, 11), status: 'status-burn'); // Example status for testing
-
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'burn_status_alerts',
-      'Burn Status Alerts',
-      channelDescription: 'Important burn status updates',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@drawable/alert_icon',
-    );
-
-    String title = isChange ? 'Burn Status Changed!' : 'Daily Burn Update';
-
-    await _notifications.show(0, title, 'Halifax County: ${status.status}', NotificationDetails(android: androidDetails));
-  }
-
-  static Color _getStatusColor(BurnStatusType statusType) {
-    switch (statusType) {
-      case BurnStatusType.burn:
-        return Colors.green;
-      case BurnStatusType.restricted:
-        return Colors.orange;
-      case BurnStatusType.noBurn:
-        return Colors.red;
-      case BurnStatusType.unknown:
-        return Colors.grey;
-    }
   }
 }

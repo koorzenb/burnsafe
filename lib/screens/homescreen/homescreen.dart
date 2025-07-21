@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
             Obx(
               () => Card(
                 child: Container(
-                  decoration: BoxDecoration(color: controller.cardColor, borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: controller.backgroundColor.value, borderRadius: BorderRadius.circular(12)),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Text(
                           'Halifax County Burn Status',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: controller.cardTextColor),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: controller.textColor.value),
                         ),
                         const SizedBox(height: 16),
                         if (controller.isLoading.value)
@@ -37,7 +37,7 @@ class HomeScreen extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Status: ${controller.isBurningAllowedText}', style: const TextStyle(fontSize: 18)),
+                              Text('Status: ${controller.isBurningAllowedText.value}', style: const TextStyle(fontSize: 18)),
                               const SizedBox(height: 8),
                               if (controller.currentStatus.value != null)
                                 Text(

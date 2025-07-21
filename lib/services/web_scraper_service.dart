@@ -8,6 +8,13 @@ class WebScraperService {
   static const String _baseUrl = 'https://novascotia.ca/burnsafe';
 
   static Future<BurnStatus> fetchBurnStatus() async {
+    if (kDebugMode) {
+      print('Mocking web scraping...');
+      await Future.delayed(const Duration(seconds: 2)); // Simulate network delay for testing
+      final now = DateTime.now();
+      return BurnStatus(statusType: now.minute % 2 == 0 ? BurnStatusType.burn : BurnStatusType.restricted, lastUpdated: now);
+    }
+
     try {
       final response = await http.get(Uri.parse(_baseUrl), headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'});
 

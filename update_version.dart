@@ -3,6 +3,16 @@ import 'dart:io';
 import 'package:pub_semver/pub_semver.dart';
 
 void main() {
+  print('Running tests...');
+  final testResult = Process.runSync('flutter', ['test'], runInShell: true);
+
+  if (testResult.exitCode != 0) {
+    print('Error: Tests failed. Aborting version update.');
+    print(testResult.stdout);
+    print(testResult.stderr);
+    return;
+  }
+
   final changelogFile = File('CHANGELOG.md');
 
   if (!changelogFile.existsSync()) {
@@ -29,7 +39,9 @@ void main() {
     commitDescription = commitParts.group(2)!.trim();
   }
 
-  final nextVersion = _updatePubspecVersion(commitType == 'fix' || commitType == 'bug' || commitType == 'ref' || commitType == 'docs' || commitType == 'chore');
+  final nextVersion = _updatePubspecVersion(
+    commitType == 'fix' || commitType == 'bug' || commitType == 'ref' || commitType == 'chore' || commitType == 'docs' || commitType == 'test',
+  );
   _updateChangelog(nextVersion, commitType, commitDescription, changelogFile);
   _commitChanges(commitMessage);
 }

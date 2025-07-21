@@ -1,22 +1,46 @@
+## 0.8.0
+
+### Feat
+
+- Add fire sound notification
+
+## 0.7.1
+
+### Test
+
+- Add comprehensive tests for burn logic service functionality
+
+## 0.7.0
+
+### Chore
+
+- Add test execution before version update to ensure stability
+
+## 0.6.2
+
+### Refactor
+
+- Enhance burn status management with improved logic and notifications
+
+## 0.6.1
+
+### Bug
+
+- Fixed the accessing of Hive for saving of burn status
+
 ## 0.6.0
-  
-  ### Feat
-  
-  - Enhance fetchAndSaveStatus method to control notification display and update status bar handling
-  
-  ## 0.5.2
-  
-  ### Refactor
-  
-  - Refactor burn status handling and improve status color management
-  
-  ## 0.5.1
-  
-  ### Chore
-  
-  - updated semantic version logic
-  
-  ## 0.5.0
+
+### Feat
+
+- Added timer to automatically manage state
+
+## 0.5.1
+
+### Refactor
+
+- Added debug code to avoid real API calls during debug session
+
+## 0.5.0
 
 ### Feat
 

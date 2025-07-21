@@ -5,17 +5,23 @@ import 'package:get/get.dart';
 
 import '../../burn_status_repository.dart';
 import '../../models/burn_status.dart';
+import '../../services/burn_logic_service.dart';
+import '../../services/notification_service.dart';
 import '../../services/scheduler_service.dart';
-import '../../services/status_bar_service.dart';
 import '../../services/web_scraper_service.dart';
-import 'homescreen_logic.dart';
 
 class HomescreenController extends GetxController {
   final BurnStatusRepository _repository = Get.find();
+  Timer? _timer;
+  final Rx<BurnStatus?> _currentStatus = Rx<BurnStatus?>(null);
+  bool? _wasBurningAllowed;
 
-  final Rx<BurnStatus?> currentStatus = Rx<BurnStatus?>(null);
+  // Reactive UI Properties
   final RxBool isLoading = false.obs;
   final RxString nextScheduledTime = '-'.obs;
+  final Rx<Color> backgroundColor = Rx<Color>(Colors.grey.shade700);
+  final Rx<Color> textColor = Rx<Color>(Colors.white);
+  final RxString isBurningAllowedText = RxString('Checking...');
 
   late final StreamSubscription<BurnStatus> _statusSubscription;
 
@@ -23,34 +29,50 @@ class HomescreenController extends GetxController {
   void onInit() {
     super.onInit();
     _statusSubscription = _repository.watchStatus().listen((status) {
-      currentStatus.value = status;
+      _currentStatus.value = status;
+      _updateDisplayStatus();
     });
 
-    // Load the initial status from the repository
     _loadInitialStatus();
     _updateScheduledTime();
   }
 
   @override
+  void onReady() {
+    super.onReady();
+    _startTimer(); // Start the timer only when the screen is ready.
+  }
+
+  @override
   void onClose() {
-    _statusSubscription.cancel(); // Clean up the subscription
+    _statusSubscription.cancel();
+    _timer?.cancel();
     super.onClose();
   }
 
-  Future<void> _loadInitialStatus() async {
-    isLoading.value = true;
-    currentStatus.value = await _repository.getStatus();
-    // If no status is in the repository, fetch it.
-    if (currentStatus.value == null) {
-      await fetchAndSaveStatus();
-    }
-    isLoading.value = false;
-  }
+  get currentStatus => _currentStatus;
 
-  void _updateScheduledTime() {
-    // Assuming SchedulerService provides this information.
-    // This part might need adjustment based on SchedulerService's implementation.
-    nextScheduledTime.value = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
+  /// The core logic for updating the UI based on the current state.
+  void _updateDisplayStatus() {
+    final now = DateTime.now();
+    final result = BurnLogicService.calculateDisplayState(
+      status: _currentStatus.value,
+      now: now,
+      wasBurningAllowed: _wasBurningAllowed,
+      getCardColor: _getCardColor,
+      getCardTextColor: _getCardTextColor,
+    );
+
+    // Apply the calculated state
+    isBurningAllowedText.value = result.isBurningAllowedText;
+    backgroundColor.value = result.backgroundColor;
+    textColor.value = result.textColor;
+    _wasBurningAllowed = result.isBurningAllowed;
+
+    // Handle side-effects
+    if (result.shouldNotify) {
+      NotificationService.showBurningAllowedNotification();
+    }
   }
 
   /// Fetches the status from the web and saves it to the repository.
@@ -59,34 +81,52 @@ class HomescreenController extends GetxController {
     try {
       final status = await WebScraperService.fetchBurnStatus();
       await _repository.saveStatus(status);
-
-      if (shouldShowNotification) {
-        await StatusBarService.showPersistentNotification(status);
-      }
+      // The stream listener will automatically call _updateDisplayStatus.
     } catch (e) {
-      // Handle potential errors, e.g., show a snackbar
       Get.snackbar('Error', 'Failed to fetch burn status: ${e.toString()}');
     } finally {
       isLoading.value = false;
     }
   }
 
-  String get isBurningAllowedText {
-    final status = currentStatus.value;
+  Future<void> _loadInitialStatus() async {
+    isLoading.value = true;
+    _currentStatus.value = await _repository.getStatus();
 
-    if (status == null) {
-      return 'No Burning Allowed';
+    if (_currentStatus.value == null) {
+      await fetchAndSaveStatus();
     } else {
-      return HomeScreenLogic.isBurningAllowed(status, DateTime.now()) ? 'Burning Allowed' : 'No Burning Allowed';
+      _updateDisplayStatus();
+    }
+
+    isLoading.value = false;
+  }
+
+  void _startTimer() {
+    // Re-evaluate the display status every 10 seconds to catch time-based changes.
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _updateDisplayStatus();
+    });
+  }
+
+  void _updateScheduledTime() {
+    nextScheduledTime.value = SchedulerService.nextScheduledTime.toLocal().toString().split('.')[0];
+  }
+
+  Color _getCardColor(BurnStatusType statusType) {
+    switch (statusType) {
+      case BurnStatusType.burn:
+        return Colors.green.shade700;
+      case BurnStatusType.restricted:
+        return Colors.yellow.shade700;
+      case BurnStatusType.noBurn:
+        return Colors.red.shade700;
+      case BurnStatusType.unknown:
+        return Colors.grey.shade700;
     }
   }
 
-  Color get cardColor {
-    return currentStatus.value?.statusType.color ?? Colors.grey.shade700;
-  }
-
-  Color get cardTextColor {
-    final statusType = currentStatus.value?.statusType;
+  Color _getCardTextColor(BurnStatusType statusType) {
     return statusType == BurnStatusType.restricted ? Colors.black87 : Colors.white;
   }
 }
