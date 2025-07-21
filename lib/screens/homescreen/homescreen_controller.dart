@@ -14,7 +14,7 @@ class HomescreenController extends GetxController {
   final BurnStatusRepository _repository = Get.find();
   Timer? _timer;
   final Rx<BurnStatus?> _currentStatus = Rx<BurnStatus?>(null);
-  bool? _wasBurningAllowed; // Tracks the previous state for change detection.
+  bool? _wasBurningAllowed;
 
   // Reactive UI Properties
   final RxBool isLoading = false.obs;
@@ -54,26 +54,25 @@ class HomescreenController extends GetxController {
 
   /// The core logic for updating the UI based on the current state.
   void _updateDisplayStatus() {
-    final status = _currentStatus.value;
-    if (status == null) {
-      isBurningAllowedText.value = 'Status Unknown';
-      backgroundColor.value = Colors.grey.shade700;
-      textColor.value = Colors.white;
-      return;
-    }
+    final now = DateTime.now();
+    final result = BurnLogicService.calculateDisplayState(
+      status: _currentStatus.value,
+      now: now,
+      wasBurningAllowed: _wasBurningAllowed,
+      getCardColor: _getCardColor,
+      getCardTextColor: _getCardTextColor,
+    );
 
-    final isAllowed = BurnLogicService.isBurningAllowed(status, DateTime.now());
+    // Apply the calculated state
+    isBurningAllowedText.value = result.isBurningAllowedText;
+    backgroundColor.value = result.backgroundColor;
+    textColor.value = result.textColor;
+    _wasBurningAllowed = result.isBurningAllowed;
 
-    // State Change Detection for Notifications
-    if (_wasBurningAllowed == false && isAllowed == true) {
+    // Handle side-effects
+    if (result.shouldNotify) {
       NotificationService.showBurningAllowedNotification();
     }
-    _wasBurningAllowed = isAllowed; // Update the previous state tracker.
-
-    // Update reactive UI properties
-    isBurningAllowedText.value = isAllowed ? 'Burning Allowed' : 'No Burning Allowed';
-    backgroundColor.value = _getCardColor(status.statusType);
-    textColor.value = _getCardTextColor(status.statusType);
   }
 
   /// Fetches the status from the web and saves it to the repository.

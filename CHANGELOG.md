@@ -1,4 +1,10 @@
-## 0.7.0
+## 0.7.1
+  
+  ### Test
+  
+  - Add comprehensive tests for burn logic service functionality
+  
+  ## 0.7.0
   
   ### Chore
   
