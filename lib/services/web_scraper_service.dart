@@ -9,7 +9,7 @@ class WebScraperService {
 
   static Future<BurnStatus> fetchBurnStatus() async {
     if (kDebugMode) {
-      print('Mocking web scraping for burn status');
+      print('Mocking web scraping...');
       await Future.delayed(const Duration(seconds: 2)); // Simulate network delay for testing
       final now = DateTime.now();
       return BurnStatus(statusType: now.minute % 2 == 0 ? BurnStatusType.burn : BurnStatusType.restricted, lastUpdated: now);

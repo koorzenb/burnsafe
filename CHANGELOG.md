@@ -1,4 +1,10 @@
-## 0.6.0
+## 0.6.1
+  
+  ### Bug
+  
+  - Fixed the accessing of Hive for saving of burn status
+  
+  ## 0.6.0
   
   ### Feat
   

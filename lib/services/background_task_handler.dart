@@ -1,3 +1,4 @@
+import 'package:burnsafe/storage/burn_status_type_adapter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../burn_status_repository.dart';
@@ -10,32 +11,33 @@ import 'web_scraper_service.dart';
 /// It is completely decoupled from the UI.
 class BackgroundTaskHandler {
   /// Fetches the current burn status and saves it to the repository.
-  /// This method is designed to be called from a background isolate.
   static Future<bool> fetchAndSaveStatus() async {
-    print('Background Task: Initializing Hive...');
-    // Must initialize Hive and register adapters within the background isolate.
-    await Hive.initFlutter();
-    if (!Hive.isAdapterRegistered(BurnStatusAdapter().typeId)) {
-      Hive.registerAdapter(BurnStatusAdapter());
-    }
-
-    print('Background Task: Opening Box...');
-    final box = await Hive.openBox<BurnStatus>('burnStatusBox');
-    final BurnStatusRepository repository = BurnStatusHiveRepository(box);
-
+    Box<BurnStatus>? box;
     try {
-      print('Background Task: Fetching status from web...'); // TODO: remove prints
+      await Hive.initFlutter();
+
+      // Register adapters if they aren't already.
+      if (!Hive.isAdapterRegistered(BurnStatusAdapter().typeId)) {
+        Hive.registerAdapter(BurnStatusAdapter());
+      }
+      if (!Hive.isAdapterRegistered(BurnStatusTypeAdapter().typeId)) {
+        Hive.registerAdapter(BurnStatusTypeAdapter());
+      }
+
+      box = await Hive.openBox<BurnStatus>('burnStatusBox');
+      final BurnStatusRepository repository = BurnStatusHiveRepository(box);
+
+      print('Background Task: Fetching status from web...');
       final status = await WebScraperService.fetchBurnStatus();
-      print('Background Task: Saving status to repository...');
       await repository.saveStatus(status);
-      print('Background Task: Successfully fetched and saved status.');
       return true;
     } catch (e) {
-      print('Background Task: Error fetching status: $e');
+      print('Background Task: Error during background fetch: $e');
       return false;
     } finally {
-      await box.close();
-      print('Background Task: Box closed.');
+      // CRITICAL: Always close the box in the background task.
+      // This releases the file lock, allowing the main UI to open it again.
+      await box?.close();
     }
   }
 }
