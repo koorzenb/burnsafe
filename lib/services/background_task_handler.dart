@@ -1,10 +1,10 @@
-import 'package:burnsafe/storage/burn_status_type_adapter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../burn_status_repository.dart';
 import '../models/burn_status.dart';
 import '../storage/burn_status_adapter.dart';
 import '../storage/burn_status_hive_repository.dart';
+import '../storage/burn_status_type_adapter.dart';
 import 'web_scraper_service.dart';
 
 /// This class is responsible for handling the execution of background tasks.

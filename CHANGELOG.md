@@ -1,4 +1,10 @@
-## 0.7.1
+## 0.8.0
+  
+  ### Feat
+  
+  - Add fire sound notification
+  
+  ## 0.7.1
   
   ### Test
   

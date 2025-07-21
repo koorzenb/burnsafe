@@ -1,16 +1,16 @@
-import 'package:burnsafe/burn_status_repository.dart';
-import 'package:burnsafe/models/burn_status.dart';
-import 'package:burnsafe/screens/homescreen/homescreen_controller.dart';
-import 'package:burnsafe/storage/burn_status_adapter.dart';
-import 'package:burnsafe/storage/burn_status_hive_repository.dart';
-import 'package:burnsafe/storage/burn_status_type_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'burn_status_repository.dart';
+import 'models/burn_status.dart';
 import 'screens/homescreen/homescreen.dart';
+import 'screens/homescreen/homescreen_controller.dart';
 import 'services/notification_service.dart';
 import 'services/scheduler_service.dart';
+import 'storage/burn_status_adapter.dart';
+import 'storage/burn_status_hive_repository.dart';
+import 'storage/burn_status_type_adapter.dart';
 
 void main() async {
   await _init();
